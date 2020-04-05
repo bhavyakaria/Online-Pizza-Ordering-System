@@ -6,15 +6,57 @@ public class Ingredient {
     public int price;
     public boolean isVeg;
     public boolean isAvailable;
+    public PizzaStore pizzaStore;
 
-    public Ingredient(String name, String description, int price, boolean isVeg, boolean isAvailable) {
-        this.name = name;
-        this.description = description;
-        this.price = price;
-        this.isVeg = isVeg;
-        this.isAvailable = isAvailable;
+    public Ingredient(IngredientBuilder builder) {
+        this.name = builder.name;
+        this.description = builder.description;
+        this.price = builder.price;
+        this.isVeg = builder.isVeg;
+        this.isAvailable = builder.isAvailable;
+        this.pizzaStore = builder.pizzaStore;
     }
 
-//        public boolean updatePrice(boolean price);
-//        public boolean changeStatus(boolean status);
+    public static class IngredientBuilder {
+        public String name;
+        public String description;
+        public int price;
+        public boolean isVeg;
+        public boolean isAvailable;
+        public PizzaStore pizzaStore;
+
+        public IngredientBuilder setName(String name) {
+            this.name = name;
+            return this;
+        }
+
+        public IngredientBuilder setDescription(String description) {
+            this.description = description;
+            return this;
+        }
+
+        public IngredientBuilder setPrice(int price) {
+            this.price = price;
+            return this;
+        }
+
+        public IngredientBuilder setVeg(boolean veg) {
+            isVeg = veg;
+            return this;
+        }
+
+        public IngredientBuilder setAvailable(boolean available) {
+            isAvailable = available;
+            return this;
+        }
+
+        public IngredientBuilder setPizzaStore(PizzaStore pizzaStore) {
+            this.pizzaStore = pizzaStore;
+            return this;
+        }
+
+        public Ingredient build() {
+            return new Ingredient(this);
+        }
+    }
 }

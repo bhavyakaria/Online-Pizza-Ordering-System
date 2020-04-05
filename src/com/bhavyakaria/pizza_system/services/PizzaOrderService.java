@@ -1,21 +1,18 @@
 package com.bhavyakaria.pizza_system.services;
 
-import com.bhavyakaria.pizza_system.enums.Status;
+import com.bhavyakaria.pizza_system.exceptions.PizzaOrderException;
+import com.bhavyakaria.pizza_system.exceptions.PizzaStoreException;
 import com.bhavyakaria.pizza_system.models.*;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class PizzaOrderService {
 
-    public List<Order> orderList = new ArrayList<>();
-
     public PizzaOrderService() {
     }
 
-    public OrderItem orderPizza(Customer customer, Pizza pizza, int quantity) {
+    public OrderItem orderPizza(Pizza pizza, int quantity) {
 
         Map<Ingredient, Integer> defaultIngredients = new HashMap<>();
 
@@ -23,42 +20,29 @@ public class PizzaOrderService {
             defaultIngredients.put(ingredient, 0);
         }
 
-        OrderItem orderItem = new OrderItem(pizza, quantity, pizza.price, quantity*pizza.price, defaultIngredients);
-
-        Order order = getOpenOrderOfCustomer(customer);
-        order.addOrderItem(orderItem);
-
-        orderList.add(order);
-
-        return orderItem;
+        return new OrderItem.Builder().setPizza(pizza).setQuantity(quantity).setBaseRate(pizza.price).setDefaultIngredients(pizza.ingredients).build();
     }
 
     public OrderItem addToppings(OrderItem orderItem, Ingredient ingredient) {
-        orderItem.orderIngredients.put(ingredient, ingredient.price);
+        orderItem.addToppings(ingredient);
         return orderItem;
     }
 
     public OrderItem replaceToppings(OrderItem orderItem, Ingredient newIngredient, Ingredient oldIngredient) {
-        boolean status = orderItem.orderIngredients.containsKey(oldIngredient);
-        if (status) {
-            orderItem.orderIngredients.remove(oldIngredient);
+        if (orderItem.defaultIngredients.contains(oldIngredient)) {
+            int index = orderItem.defaultIngredients.indexOf(oldIngredient);
+            orderItem.defaultIngredients.add(index, newIngredient);
         }
-        orderItem.orderIngredients.put(newIngredient, newIngredient.price);
         return orderItem;
     }
 
-    private Order getOpenOrderOfCustomer(Customer customer) {
-        Order order;
-        if (customer.orders.size() > 0 && customer.orders.get(customer.orders.size() - 1).status.equals(Status.OPEN)) {
-            order = customer.orders.get(customer.orders.size() - 1);
-        } else {
-            order = new Order(customer, Status.OPEN, null);
-            customer.orders.add(order);
+    public void placeOrder(Order order, PizzaStore pizzaStore) {
+        try {
+            pizzaStore.acceptOrder(order);
+        } catch (PizzaOrderException e) {
+            e.printException();
+        } catch (PizzaStoreException e) {
+            e.printStackTrace();
         }
-        return order;
-    }
-
-    public void placeOrder(Customer customer) {
-        customer.orders.get(customer.orders.size()-1).status = Status.RECEIVED;
     }
 }

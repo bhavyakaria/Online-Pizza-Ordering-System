@@ -1,6 +1,6 @@
 package com.bhavyakaria.pizza_system.models;
 
-import com.bhavyakaria.pizza_system.enums.Status;
+import com.bhavyakaria.pizza_system.enums.PizzaOrderStatus;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -8,15 +8,20 @@ import java.util.List;
 
 public class Order {
     public Customer customer;
-    public Status status;
+    public PizzaOrderStatus pizzaOrderStatus;
     public int totalAmount;
-    public Date placedAt;	//placedAt
+    public Date placedOn;
     public List<OrderItem> orderItems;
+    public PizzaStore pizzaStore;
 
-    public Order(Customer customer, Status status, Date placedAt) {
+    public Order(Customer customer, PizzaOrderStatus pizzaOrderStatus) {
         this.customer = customer;
-        this.status = status;
-        this.placedAt = placedAt;
+        this.pizzaOrderStatus = pizzaOrderStatus;
+        this.placedOn = new Date();
+    }
+
+    public void setPizzaOrderStatus(PizzaOrderStatus pizzaOrderStatus) {
+        this.pizzaOrderStatus = pizzaOrderStatus;
     }
 
     public void addOrderItem(OrderItem orderItem) {
@@ -31,22 +36,25 @@ public class Order {
 
         // base price
         for (OrderItem orderItem : orderItems) {
-            total += orderItem.amount;
-
-            // additional toppings
-            total += orderItem.totalToppingsCost();
+            total += orderItem.calculateTotalAmount();
         }
         this.totalAmount = total;
-        return total;
+        return this.totalAmount;
     }
 
     public void removeOrderItem(OrderItem orderItem) {
         orderItems.remove(orderItem);
     }
 
-    public void updateOrderItem(OrderItem orderItem) {
-        int index = orderItems.indexOf(orderItem);
-        orderItems.set(index, orderItem);
-    }
 
+    @Override
+    public String toString() {
+        return "Order{" +
+                "customer=" + customer +
+                ", status=" + pizzaOrderStatus +
+                ", totalAmount=" + totalAmount +
+                ", placedOn=" + placedOn +
+                ", orderItems=" + orderItems +
+                '}';
+    }
 }

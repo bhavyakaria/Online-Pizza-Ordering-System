@@ -1,14 +1,10 @@
 package com.bhavyakaria.pizza_system;
 
-import com.bhavyakaria.pizza_system.models.Customer;
-import com.bhavyakaria.pizza_system.models.Ingredient;
-import com.bhavyakaria.pizza_system.models.OrderItem;
-import com.bhavyakaria.pizza_system.models.Pizza;
+import com.bhavyakaria.pizza_system.enums.PizzaOrderStatus;
+import com.bhavyakaria.pizza_system.models.*;
 import com.bhavyakaria.pizza_system.services.PizzaOrderService;
-
-import java.util.ArrayList;
+import com.bhavyakaria.pizza_system.services.PizzaStoreService;
 import java.util.List;
-import java.util.Map;
 
 public class Main {
 
@@ -17,53 +13,53 @@ public class Main {
         PizzaOrderService pizzaOrderService = new PizzaOrderService();
         int NO_OF_PIZZAS = 10;
         int NO_OF_TOPPINGS = 5;
-        List<Pizza> pizzaList = new ArrayList<>();
-        List<Ingredient> toppingsList = new ArrayList<>();
 
-        // adding toppings available for order
-        for (int i = 0; i < NO_OF_TOPPINGS; i++) {
-            toppingsList.add(new Ingredient("Topping "+i, null, 50+i, true, true));
-        }
+        PizzaStoreService pizzaStoreService = new PizzaStoreService();
 
-        // adding pizzas available for order
-        for (int i = 0; i < NO_OF_PIZZAS; i++) {
-            List<Ingredient> ingredients = new ArrayList<>();
-            ingredients.add(toppingsList.get(i % 5));
-            pizzaList.add(new Pizza("Pizza "+i, 100+i, true, true, ingredients));
-        }
+        PizzaStore pizzaStore1 = new PizzaStore("Pizza Hut");
+        pizzaStore1.setPizzaList(pizzaStoreService.generatePizzaList(NO_OF_PIZZAS, pizzaStore1));
+        pizzaStore1.setToppingList(pizzaStoreService.generateToppingsList(NO_OF_TOPPINGS, pizzaStore1));
+        pizzaStoreService.addPizzaStore(pizzaStore1);
 
-	    Customer customer = new Customer("Bhavya", "Karia", "abc@gmail.com", "1234567890", "103");
+        PizzaStore pizzaStore2 = new PizzaStore("ABC Pizza");
+        pizzaStore2.setPizzaList(pizzaStoreService.generatePizzaList(NO_OF_PIZZAS, pizzaStore2));
+        pizzaStore2.setToppingList(pizzaStoreService.generateToppingsList(NO_OF_TOPPINGS, pizzaStore2));
+        pizzaStoreService.addPizzaStore(pizzaStore2);
+
+        List<Pizza> pizzaMenu = pizzaStoreService.getPizzaMenu();
+        List<Ingredient> toppingsMenu = pizzaStoreService.getToppingsMenu();
+
+	    Customer customer = new Customer.Builder().setFirstName("Bhavya").setLastName("Karia").setEmail("bhavya@gmail.com").build();
+
+	    Order order = pizzaStoreService.generateNewOrder(customer);
 
         // add pizza to order
-        OrderItem orderItemOne = pizzaOrderService.orderPizza(customer, pizzaList.get(3), 2);
+        OrderItem orderItemOne = pizzaOrderService.orderPizza(pizzaMenu.get(3), 2);
 
         // add toppings
-        orderItemOne = pizzaOrderService.addToppings(orderItemOne, toppingsList.get(2));
+        orderItemOne = pizzaOrderService.addToppings(orderItemOne, toppingsMenu.get(2));
 
         // replace the default topping
-        orderItemOne = pizzaOrderService.replaceToppings(orderItemOne, toppingsList.get(4), toppingsList.get(3));
+        orderItemOne = pizzaOrderService.replaceToppings(orderItemOne, toppingsMenu.get(4), toppingsMenu.get(3));
 
         // add another pizza
-        OrderItem orderItemThree = pizzaOrderService.orderPizza(customer, pizzaList.get(5), 4);
+        OrderItem orderItemThree = pizzaOrderService.orderPizza(pizzaMenu.get(5), 4);
 
-        // calculate the total bill
-        customer.orders.get(0).calculateTotalAmount();
+        order.addOrderItem(orderItemOne);
+        order.addOrderItem(orderItemThree);
 
         // place the order
-        pizzaOrderService.placeOrder(customer);
+        pizzaOrderService.placeOrder(order, pizzaStore1);
 
-        // place another order by the same customer
-        OrderItem orderItemTwo = pizzaOrderService.orderPizza(customer, pizzaList.get(6), 1);
+        Order order2 = pizzaStoreService.generateNewOrder(customer);
 
-        System.out.println("Customer: " + customer.firstName + " has " + customer.orders.size() + " orders");
-        System.out.print("Order 1:");
-        for (OrderItem orderItem : customer.orders.get(0).orderItems) {
-            System.out.print("\n\nOrder Item: " + orderItem.pizza.name + " Amount: " + orderItem.amount);
-            for (Map.Entry<Ingredient, Integer> entry : orderItem.orderIngredients.entrySet()) {
-                System.out.print("\nToppings: " + entry.getKey().name + " Price: " + entry.getValue());
-            }
-        }
-        System.out.println("\nTotal Amount: " + customer.orders.get(0).totalAmount);
+        OrderItem orderItem3 = pizzaOrderService.orderPizza(pizzaMenu.get(3), 4);
+        order2.addOrderItem(orderItem3);
+
+        pizzaOrderService.placeOrder(order2, pizzaStore2);
+
+        System.out.println("Customer: " + customer.getFirstName() + " has " + customer.getOrders().size() + " orders");
+        pizzaStoreService.getPizzaStoreAnalytics(PizzaOrderStatus.CONFIRMED, pizzaStore1);
 
     }
 }
